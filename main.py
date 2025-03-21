@@ -62,19 +62,27 @@ def ram_type():
     try:
         if platform.system() == "Windows":
             command = ["powershell", "(Get-CimInstance -ClassName Win32_PhysicalMemory | Measure-Object -Property MemoryType -Sum).Sum"]
-            return subprocess.check_output(command).decode().strip()
+            ram_type = subprocess.check_output(command).decode().strip()
+            if ram_type == "24":
+                return "DDR3"
+            elif ram_type == "26":
+                return "DDR4"
+            elif ram_type == "20":
+                return "DDR5"
+            else:
+                return None
         else:
             return None
     except Exception as e:
         return f"Error retrieving RAM type: {e}"
-
+    
 def windows_version():
     # Get the Version like 24H2
     try:
         if platform.system() == "Windows":
-            command = ["powershell", "(Get-CimInstance -ClassName Win32_OperatingSystem).Version"]
-            version = subprocess.check_output(command).decode().strip()
-            return re.sub(r'(\d+)\.(\d+)', r'\1.\2', version)
+            command = ["powershell", "(Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion').DisplayVersion"]
+            version = subprocess.check_output(command)
+            return version
         else:
             return None
     except Exception as e:
@@ -118,26 +126,38 @@ def is_active():
     try:
         if platform.system() == "Windows":
             command = ["powershell", "(Get-CimInstance -ClassName SoftwareLicensingProduct | Where-Object { $_.PartialProductKey -ne $null } | Select-Object -ExpandProperty LicenseStatus)"]
-            return subprocess.check_output(command).decode().strip()
+            if subprocess.check_output(command).decode().strip() == "1":
+                return "Windows is activated"
+            else:
+                return "Windows is not activated"
         else:
             return None
     except Exception as e:
         return f"Error checking activation status: {e}"
 
 def driveSize():
-    # Get the Primary drive Size
+    # Get the Primary drive Size in GB, only round numbers like 256, 512, 1024
     try:
         if platform.system() == "Windows":
-            command = ["powershell", "(Get-CimInstance -ClassName Win32_LogicalDisk -Filter \"DriveType=3\" | Measure-Object -Property Size -Sum).Sum / 1GB"]
-            return subprocess.check_output(command).decode().strip()
+            command = ["powershell", "(Get-CimInstance -ClassName Win32_LogicalDisk -Filter 'DeviceID=\"C:\"').Size / 1GB"]
+            drive_size = subprocess.check_output(command).decode().strip()
+            return round(float(drive_size))
         else:
             return None
     except Exception as e:
         return f"Error retrieving drive size: {e}"
 
+
 print(f"Produkt: {product_name()}; Serial Nr: {serial_number()}")
 print(f"CPU: {processor()}/ {processor_freq()} GHz")
 print(f"RAM: {ramamount()} GB; {ram_frequency()} MHz; {ram_type()}")
+
+print("---Unsorted---")
+
+print(f"Windows Version: {windows_version()}; Edition: {windows_edition()}")
+print(f"Last Update: {lastupdatedate()}")
+print(f"Drive Size: {driveSize()} GB")
+print(f"Windows Activation Status: {is_active()}")
 
 
 
