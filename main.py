@@ -5,7 +5,7 @@ import subprocess
 import shutil
 
 import datetime
-
+# import choice
 
 
 dell = "Dell" in subprocess.check_output(["powershell", "Get-CimInstance -ClassName Win32_ComputerSystem | Select-Object -ExpandProperty Manufacturer"]).decode().strip()
@@ -369,3 +369,5 @@ print(f"Benutzer: {userlist()}")
 print(f"Bitlocker: {bitlocker()}")
 print(f"In der Domäne: {domain()}")
 
+
+# choice.main()
