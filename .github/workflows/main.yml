@@ -2,7 +2,8 @@ name: Build and Release Executables
 
 on:
   workflow_dispatch:  # Allows manual triggering
-
+permissions:
+  contents: write
 jobs:
   build-and-release:
     runs-on: windows-latest  # Using Windows to build .exe files
