@@ -3,10 +3,8 @@ import platform
 import re
 import subprocess
 import shutil
-
 import datetime
-# import choice
-
+import msvcrt  # Add this import at the top with other imports
 
 dell = "Dell" in subprocess.check_output(["powershell", "Get-CimInstance -ClassName Win32_ComputerSystem | Select-Object -ExpandProperty Manufacturer"]).decode().strip()
 def processor(): 
@@ -323,11 +321,16 @@ def dellexpressstr():
 
 def userlist():
     # Get the list of users minus the standard ones, so no SYSTEM, Administrator, etc.
+    # Important. The format is like this: "User1, User2, User3"
     try:
         if platform.system() == "Windows":
             command = ["powershell", "(Get-CimInstance -ClassName Win32_UserProfile | Where-Object { $_.Special -eq $false }).LocalPath"]
             users = subprocess.check_output(command).decode().strip()
-            return users.splitlines()
+            # Remove the C:\Users\ part
+            users = [user.split("\\")[-1] for user in users.splitlines()]
+            # Remove duplicates and sort
+            users = sorted(set(users))
+            return ", ".join(users)
         else:
             return None
     except Exception as e:
@@ -368,6 +371,8 @@ print("\n")
 print(f"Benutzer: {userlist()}")
 print(f"Bitlocker: {bitlocker()}")
 print(f"In der Domäne: {domain()}")
+print("\n")
 
 
-# choice.main()
+# import file choice.py
+import choice # This runs continously and will eventually exit the program if the user decides so
