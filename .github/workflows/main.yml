@@ -28,23 +28,23 @@ jobs:
           
       - name: Build with PyInstaller
         run: |
-          pyinstaller --onefile --console --name ChecklistGen-Py main.py
+          pyinstaller --onefile --console -i ./.img/checklist.ico --name ChecklistGen-Py main.py
           
       - name: Build with Nuitka
         run: |
-          python -m nuitka --standalone --follow-imports --assume-yes-for-downloads --output-filename=ChecklistGen-C.exe main.py
+          python -m nuitka --standalone --follow-imports --assume-yes-for-downloads --windows-icon-from-ico=./.img/checklist.ico --output-filename=dist/ChecklistGen-C.exe main.py
           
       - name: Create Release
         id: create_release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: release-${{ github.run_number }}
-          name: Release ${{ github.run_number }}
-          draft: false
+          tag_name: a${{ github.run_number }}
+          name: Automatic release a${{ github.run_number }}
+          draft: true
           prerelease: false
           files: |
             dist/ChecklistGen-Py.exe
-            ChecklistGen-C.exe
+            dist/ChecklistGen-C.exe
             launcher.ps1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
