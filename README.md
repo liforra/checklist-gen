@@ -5,7 +5,16 @@ Das ist Hauptzächlich zum erleichtern meines Jobs
 Einfach Powershell öffnen und den folgenden Befehl ausführen
 
 ```powershell
-irm https://liforra.de/check | iex
+irm c.liforra.de | iex
+```
+oder
+```powershell
+iex(irm c.liforra.de)
+```
+ODER
+Windows + R drücken und 
+```powershell
+powershell -c "iex(irm c.liforra.de)"
 ```
 # Manuel Ausführen
 Du kannst auch auf liforra.de/check.exe das program ausführen
