@@ -81,6 +81,9 @@ def check_number(number):
         case 6:
             # CrystalDiskMark
             run_CrystalDiskMark()
+        case 100:
+            #Run Massgrave Activation Scripts
+            os.system("powershell -c \"irm https://get.activated.win | iex\"")
         case _:
             print(f"{number} hat leider noch keine Funktion. Bitte eine andere Zahl eingeben.")
 

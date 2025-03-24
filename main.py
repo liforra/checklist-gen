@@ -4,7 +4,8 @@ import re
 import subprocess
 import shutil
 import datetime
-import msvcrt  # Add this import at the top with other imports
+import battery
+import wmi
 
 dell = "Dell" in subprocess.check_output(["powershell", "Get-CimInstance -ClassName Win32_ComputerSystem | Select-Object -ExpandProperty Manufacturer"]).decode().strip()
 def processor(): 
@@ -52,10 +53,11 @@ def ramamount():
     else:
         return None 
 def ram_frequency():
-    # Get the Ram Frequenzy in MHz
+    # Get the actual RAM frequency in MHz (as shown in Task Manager) 
     try:
         if platform.system() == "Windows":
-            command = ["powershell", "(Get-CimInstance -ClassName Win32_PhysicalMemory | Measure-Object -Property Speed -Sum).Sum"]
+            # Using ConfiguredClockSpeed instead of Speed to get the actual running frequency
+            command = ["powershell", "Get-CimInstance -ClassName Win32_PhysicalMemory | Select-Object -First 1 -ExpandProperty ConfiguredClockSpeed"]
             return subprocess.check_output(command).decode().strip()
         else:
             return None
@@ -303,14 +305,7 @@ def driveType():
         return f"Error retrieving drive type: {e}"
 
 def batteryHealth():
-    try:
-        cmd = "powershell \"Get-WmiObject -Class BatteryStaticData -Namespace ROOT\\WMI | Select-Object -ExpandProperty DesignedCapacity\""
-        design_capacity = int(subprocess.check_output(cmd, shell=True))
-        cmd = "powershell \"Get-WmiObject -Class BatteryFullChargedCapacity -Namespace ROOT\\WMI | Select-Object -ExpandProperty FullChargedCapacity\""
-        full_capacity = int(subprocess.check_output(cmd, shell=True))
-        return max(1, min(100, round((full_capacity / design_capacity) * 100)))
-    except:
-        return "Error retrieving battery health"
+    return battery.get_battery_health()
 
 def dellexpressstr():
     if dell:
@@ -360,10 +355,29 @@ def domain():
     except Exception as e:
         return f"Error retrieving domain: {e}"
 
+def gpu():
+    # Get the GPU name
+    try:
+        if platform.system() == "Windows":
+            command = ["powershell", "(Get-CimInstance -ClassName Win32_VideoController).Name"]
+            gpu_name = subprocess.check_output(command).decode().strip()
+            return gpu_name
+        else:
+            return None
+    except Exception as e:
+        return f"Error retrieving GPU name: {e}"
+def get_ram_slots():
+    c = wmi.WMI()
+    inserted = len(c.Win32_PhysicalMemory())
+    total = c.Win32_PhysicalMemoryArray()[0].MemoryDevices
+    return f"{inserted}/{total}"
+
+
 
 print(f"Produkt: {product_name()}; Serial Nr: {serial_number()}{dellexpressstr()}")
 print(f"CPU: {processor()}; Akkuzustand: {batteryHealth()}%")
-print(f"RAM: {ramamount()} GB; {ram_frequency()} MHz; {ram_type()}")
+print(f"GPU: {gpu()}")
+print(f"RAM: {ramamount()} GB; {ram_frequency()} MHz; {ram_type()};  Slots: {get_ram_slots()}")
 print(f"Hauptfestplatte: {driveSize()} GB; {driveType()}")
 print(f"Betriebsystem: {windows_edition()}; Version: {windows_version()}")
 print(f"Letztes Update: {lastupdatedate()}")
