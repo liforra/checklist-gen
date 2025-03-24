@@ -216,18 +216,17 @@ def product_name():
         return f"Error retrieving product name: {e}"
 
 def is_active():
-    # Check if the Windows is activated
+    # Check if the system is activated
     try:
         if platform.system() == "Windows":
-            command = ["powershell", "(Get-CimInstance -ClassName SoftwareLicensingProduct | Where-Object { $_.PartialProductKey -ne $null } | Select-Object -ExpandProperty LicenseStatus)"]
-            if subprocess.check_output(command).decode().strip() == "1":
-                return "Windows is activated"
-            else:
-                return "Windows is not activated"
+            command = ["powershell", "(Get-CimInstance -ClassName SoftwareLicensingProduct | Where-Object { $_.PartialProductKey -ne $null }).LicenseStatus"]
+            status = subprocess.check_output(command).decode().strip()
+            return "Activated" if status == "1" else "Not Activated"
         else:
             return None
     except Exception as e:
         return f"Error checking activation status: {e}"
+
 
 
 def driveSize(path=None):
@@ -371,15 +370,30 @@ def get_ram_slots():
     inserted = len(c.Win32_PhysicalMemory())
     total = c.Win32_PhysicalMemoryArray()[0].MemoryDevices
     return f"{inserted}/{total}"
-
-
+def ramsticktype():
+    # Detect the ram type (DIMM, SO-DIMM, etc.)
+    try:
+        if platform.system() == "Windows":
+            command = ["powershell", "(Get-CimInstance -ClassName Win32_PhysicalMemory | Select-Object -First 1 -ExpandProperty FormFactor)"]
+            ram_type = subprocess.check_output(command).decode().strip()
+            form_factors = {
+                "2": "DIMM",
+                "3": "SO-DIMM",
+                "4": "SIMM",
+                "5": "LGA"
+            }
+            return form_factors.get(ram_type, f"Unknown ({ram_type})")
+        else:
+            return None
+    except Exception as e:
+        return f"Error retrieving RAM type: {e}"
 
 print(f"Produkt: {product_name()}; Serial Nr: {serial_number()}{dellexpressstr()}")
 print(f"CPU: {processor()}; Akkuzustand: {batteryHealth()}%")
 print(f"GPU: {gpu()}")
-print(f"RAM: {ramamount()} GB; {ram_frequency()} MHz; {ram_type()};  Slots: {get_ram_slots()}")
+print(f"RAM: {ramamount()} GB; {ram_frequency()} MHz; {ram_type()};  Slots: {get_ram_slots()}; RAM-Art: {ramsticktype()}")
 print(f"Hauptfestplatte: {driveSize()} GB; {driveType()}")
-print(f"Betriebsystem: {windows_edition()}; Version: {windows_version()}")
+print(f"Betriebsystem: {windows_edition()}; Version: {windows_version()}; Aktivierung: {is_active()}")
 print(f"Letztes Update: {lastupdatedate()}")
 print("\n")
 print(f"Benutzer: {userlist()}")

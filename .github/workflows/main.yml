@@ -32,12 +32,9 @@ jobs:
           
       - name: Build with Nuitka
         run: |
-          python -m nuitka --onefile --standalone --follow-imports --assume-yes-for-downloads \
-            --windows-icon-from-ico=./.img/checklist.ico \
-            --include-data-files=./.img/checklist.ico=./checklist.ico \
-            --output-dir=dist main.py
+          python -m nuitka --standalone --follow-imports --assume-yes-for-downloads --windows-icon-from-ico=./.img/checklist.ico --output-dir=dist main.py
           # Rename the executable to match your expected name
-          mv dist/main.exe dist/ChecklistGen-C.exe
+          mv "dist/main.dist/main.exe" "dist/ChecklistGen-C.exe"
           
       - name: Create Release
         id: create_release
