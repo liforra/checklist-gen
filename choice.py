@@ -61,31 +61,6 @@ def run_CrystalDiskMark():
     print("CrystalDiskMarkPortable.exe not found on any drive.")
 
 
-def check_number(number):
-    match number:
-        case 1:
-            # Open Device Manager in Windows
-            os.system("start devmgmt.msc")
-        case 2:
-            # Open Windows Update Page in Settings
-            os.system("start ms-settings:windowsupdate")
-        case 3:
-            # Download and run the keyboard test program
-            os.system("start https://liforra.de/keyboardtest.exe")
-        case 4:
-            # Run Battery Report
-            os.system("start cmd /c powercfg /batteryreport")
-        case 5:
-            # Run Raw Input Test
-            raw_input_test()
-        case 6:
-            # CrystalDiskMark
-            run_CrystalDiskMark()
-        case 100:
-            #Run Massgrave Activation Scripts
-            os.system("powershell -c \"irm https://get.activated.win | iex\"")
-        case _:
-            print(f"{number} hat leider noch keine Funktion. Bitte eine andere Zahl eingeben.")
 
 while True:
     userinput = input("Bitte eine Zahl eingeben (1 = Geräte-Manager, 2 = Windows Update, 3 = Tastaturtest, 4 = Akku Report, 5 = Raw Input Test, 6 = CrystalDiskMark, q = quit)\n")
