@@ -4,49 +4,6 @@ from pynput import keyboard, mouse
 # Track the number of times 'Esc' is pressed
 esc_press_count = 0
 
-def raw_input_test():
-    # This will import one library and show every key up and down
-
-    # Callback for keyboard events
-    def on_key_press(key):
-        global esc_press_count
-        try:
-            print(f"Taste: {key.char} gedrückt")
-        except AttributeError:
-            print(f"Spezielle Taste: {key} gedrückt")
-
-        # Check for 'Esc' key
-        if key == keyboard.Key.esc:
-            esc_press_count += 1
-            print(f"'Esc' {esc_press_count} mal gedrückt (Zwei mal drücken um zum Hauptmenü zurückzukehren)")
-            if esc_press_count == 2:
-                print("Returning to main menu...")
-                return False  # Stop the keyboard listener
-
-    def on_key_release(key):
-        print(f"Key released: {key}")
-
-    # Callback for mouse events
-    def on_click(x, y, button, pressed):
-        if pressed:
-            print(f"Mouse clicked at ({x}, {y}) with {button}")
-        else:
-            print(f"Mouse released at ({x}, {y}) with {button}")
-
-    def on_scroll(x, y, dx, dy):
-        print(f"Mouse scrolled at ({x}, {y}) with delta ({dx}, {dy})")
-
-    # Start keyboard listener
-    keyboard_listener = keyboard.Listener(on_press=on_key_press, on_release=on_key_release)
-    keyboard_listener.start()
-
-    # Start mouse listener
-    mouse_listener = mouse.Listener(on_click=on_click, on_scroll=on_scroll)
-    mouse_listener.start()
-
-    # Keep the program running until 'Esc' is pressed twice
-    keyboard_listener.join()
-    mouse_listener.stop()
 
 
 def run_CrystalDiskMark():

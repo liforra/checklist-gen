@@ -1,0 +1,1 @@
+# This is gonna be a script that does the same as the python script, but in bash to avoid the need of signing the executable
