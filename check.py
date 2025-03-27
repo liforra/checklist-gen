@@ -16,7 +16,7 @@ def processor():
     # Formatted as Intel i5-6300U
     try:
         if platform.system() == "Windows":
-            command = ["powershell", "(Get-CimInstance -ClassName Win32_Processor).Name"]
+            command = ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "(Get-CimInstance -ClassName Win32_Processor).Name"]
             return subprocess.check_output(command).decode().strip()
         elif platform.system() == "Darwin":
             return None
@@ -29,7 +29,7 @@ def processor_freq():
     # in GHz
     try:
         if platform.system() == "Windows":
-            command = ["powershell", "(Get-CimInstance -ClassName Win32_Processor).CurrentClockSpeed"]
+            command = ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "(Get-CimInstance -ClassName Win32_Processor).CurrentClockSpeed"]
             return subprocess.check_output(command).decode().strip()
         else:
             return None
@@ -38,7 +38,7 @@ def processor_freq():
 def serial_number():
     try:
         if platform.system() == "Windows":
-            command = ["powershell", "Get-CimInstance -ClassName Win32_BIOS | Select-Object -ExpandProperty SerialNumber"]
+            command = ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "Get-CimInstance -ClassName Win32_BIOS | Select-Object -ExpandProperty SerialNumber"]
             return subprocess.check_output(command).decode().strip()
         elif platform.system() == "Darwin":
             return None
