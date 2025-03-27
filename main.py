@@ -421,6 +421,12 @@ class Menu:
             self.term.reset()  # Ensure terminal is reset when display ends
 
 def main():
+    # Handle terminal for blessed in GUI mode
+    import sys
+    sys.stdout = open('nul', 'w')
+    sys.stderr = open('nul', 'w')
+    
+    # Continue with existing code
     term = Terminal()
     try:
         start_check_threads()
