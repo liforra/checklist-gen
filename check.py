@@ -7,17 +7,20 @@ import datetime
 import battery
 import wmi
 
+# Add constant for hidden window
+CREATE_NO_WINDOW = 0x08000000
+
 """
 // vscode-fold=1
 """
 # vscode-fold=1
-dell = "Dell" in subprocess.check_output(["powershell", "Get-CimInstance -ClassName Win32_ComputerSystem | Select-Object -ExpandProperty Manufacturer"]).decode().strip()
+dell = "Dell" in subprocess.check_output(["powershell", "Get-CimInstance -ClassName Win32_ComputerSystem | Select-Object -ExpandProperty Manufacturer"], creationflags=CREATE_NO_WINDOW).decode().strip()
 def processor(): 
     # Formatted as Intel i5-6300U
     try:
         if platform.system() == "Windows":
             command = ["powershell", "(Get-CimInstance -ClassName Win32_Processor).Name"]
-            return subprocess.check_output(command).decode().strip()
+            return subprocess.check_output(command, creationflags=CREATE_NO_WINDOW).decode().strip()
         elif platform.system() == "Darwin":
             return None
         elif platform.system() == "Linux":
@@ -30,7 +33,7 @@ def processor_freq():
     try:
         if platform.system() == "Windows":
             command = ["powershell", "(Get-CimInstance -ClassName Win32_Processor).CurrentClockSpeed"]
-            return subprocess.check_output(command).decode().strip()
+            return subprocess.check_output(command, creationflags=CREATE_NO_WINDOW).decode().strip()
         else:
             return None
     except Exception as e:
@@ -39,7 +42,7 @@ def serial_number():
     try:
         if platform.system() == "Windows":
             command = ["powershell", "Get-CimInstance -ClassName Win32_BIOS | Select-Object -ExpandProperty SerialNumber"]
-            return subprocess.check_output(command).decode().strip()
+            return subprocess.check_output(command, creationflags=CREATE_NO_WINDOW).decode().strip()
         elif platform.system() == "Darwin":
             return None
         elif platform.system() == "Linux":
@@ -53,7 +56,7 @@ def toexpress(SerialNumber: int):
 def ramamount():
     if platform.system() == "Windows":
         command = ["powershell", "(Get-CimInstance -ClassName Win32_PhysicalMemory | Measure-Object -Property Capacity -Sum).Sum / 1GB"]
-        return subprocess.check_output(command).decode().strip()
+        return subprocess.check_output(command, creationflags=CREATE_NO_WINDOW).decode().strip()
     else:
         return None 
 def ram_frequency():
@@ -62,7 +65,7 @@ def ram_frequency():
         if platform.system() == "Windows":
             # Using ConfiguredClockSpeed instead of Speed to get the actual running frequency
             command = ["powershell", "Get-CimInstance -ClassName Win32_PhysicalMemory | Select-Object -First 1 -ExpandProperty ConfiguredClockSpeed"]
-            return subprocess.check_output(command).decode().strip()
+            return subprocess.check_output(command, creationflags=CREATE_NO_WINDOW).decode().strip()
         else:
             return None
     except Exception as e:
@@ -72,7 +75,7 @@ def ram_type():
     try:
         if platform.system() == "Windows":
             command = ["powershell", "Get-CimInstance -ClassName Win32_PhysicalMemory | Select-Object -ExpandProperty SMBIOSMemoryType -First 1"]
-            ram_type = subprocess.check_output(command).decode().strip()
+            ram_type = subprocess.check_output(command, creationflags=CREATE_NO_WINDOW).decode().strip()
             memory_types = {
                 "20": "DDR",
                 "21": "DDR2",
@@ -90,7 +93,7 @@ def windows_version():
     try:
         if platform.system() == "Windows":
             command = ["powershell", "(Get-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion').DisplayVersion"]
-            version = subprocess.check_output(command).decode().strip()
+            version = subprocess.check_output(command, creationflags=CREATE_NO_WINDOW).decode().strip()
             # Remove any carriage returns, newlines, and extra whitespace
             version = version.replace('\r', '').replace('\n', '').strip()
             return version
@@ -103,7 +106,7 @@ def windows_edition():
     try:
         if platform.system() == "Windows":
             command = ["powershell", "(Get-CimInstance -ClassName Win32_OperatingSystem).Caption"]
-            edition = subprocess.check_output(command).decode().strip()
+            edition = subprocess.check_output(command, creationflags=CREATE_NO_WINDOW).decode().strip()
             return re.sub(r'(\w+)\s+(\d+)', r'\1 \2', edition)
         else:
             return None
@@ -125,7 +128,8 @@ def lastupdatedate():
             text=True,
             shell=True,
             encoding='utf-8',
-            errors='replace'
+            errors='replace',
+            creationflags=CREATE_NO_WINDOW
         )
         
         if result.returncode == 0 and result.stdout.strip():
@@ -158,7 +162,8 @@ def lastupdatedate():
                 text=True,
                 shell=True,
                 encoding='utf-8',
-                errors='replace'
+                errors='replace',
+                creationflags=CREATE_NO_WINDOW
             )
             
             if result2.returncode == 0 and result2.stdout.strip():
@@ -184,7 +189,8 @@ def lastupdatedate():
             text=True,
             shell=True,
             encoding='utf-8',
-            errors='replace'
+            errors='replace',
+            creationflags=CREATE_NO_WINDOW
         )
         
         if result3.returncode == 0 and result3.stdout.strip():
@@ -213,7 +219,7 @@ def product_name():
     try:
         if platform.system() == "Windows":
             command = ["powershell", "(Get-CimInstance -ClassName Win32_ComputerSystem).Model"]
-            return subprocess.check_output(command).decode().strip()
+            return subprocess.check_output(command, creationflags=CREATE_NO_WINDOW).decode().strip()
         else:
             return None
     except Exception as e:
@@ -224,7 +230,7 @@ def is_active():
     try:
         if platform.system() == "Windows":
             command = ["powershell", "(Get-CimInstance -ClassName SoftwareLicensingProduct | Where-Object { $_.PartialProductKey -ne $null }).LicenseStatus"]
-            status = subprocess.check_output(command).decode().strip()
+            status = subprocess.check_output(command, creationflags=CREATE_NO_WINDOW).decode().strip()
             return "Activated" if status == "1" else "Not Activated"
         else:
             return None
@@ -289,7 +295,7 @@ def driveType():
                 $media = $disk.MediaType
                 "$bus,$media"
             """]
-            result = subprocess.check_output(cmd).decode().strip()
+            result = subprocess.check_output(cmd, creationflags=CREATE_NO_WINDOW).decode().strip()
             bus_type, media_type = result.split(',')
             
             if "NVMe" in bus_type:
@@ -323,7 +329,7 @@ def userlist():
     try:
         if platform.system() == "Windows":
             command = ["powershell", "(Get-CimInstance -ClassName Win32_UserProfile | Where-Object { $_.Special -eq $false }).LocalPath"]
-            users = subprocess.check_output(command).decode().strip()
+            users = subprocess.check_output(command, creationflags=CREATE_NO_WINDOW).decode().strip()
             # Remove the C:\Users\ part
             users = [user.split("\\")[-1] for user in users.splitlines()]
             # Remove duplicates and sort
@@ -339,7 +345,7 @@ def bitlocker():
     try:
         if platform.system() == "Windows":
             command = ["powershell", "(Get-BitLockerVolume -MountPoint 'C:').ProtectionStatus"]
-            status = subprocess.check_output(command).decode().strip()
+            status = subprocess.check_output(command, creationflags=CREATE_NO_WINDOW).decode().strip()
             return "Encrypted" if status == "1" else "Not Encrypted"
         else:
             return None
@@ -351,7 +357,7 @@ def domain():
     try:
         if platform.system() == "Windows":
             command = ["powershell", "(Get-CimInstance -ClassName Win32_ComputerSystem).Domain"]
-            domain = subprocess.check_output(command).decode().strip()
+            domain = subprocess.check_output(command, creationflags=CREATE_NO_WINDOW).decode().strip()
             return domain if domain else "Keine"
         else:
             return None
@@ -363,7 +369,7 @@ def gpu():
     try:
         if platform.system() == "Windows":
             command = ["powershell", "(Get-CimInstance -ClassName Win32_VideoController).Name"]
-            gpu_name = subprocess.check_output(command).decode().strip()
+            gpu_name = subprocess.check_output(command, creationflags=CREATE_NO_WINDOW).decode().strip()
             return gpu_name
         else:
             return None
@@ -385,7 +391,7 @@ def ramsticktype():
     try:
         if platform.system() == "Windows":
             command = ["powershell", "(Get-CimInstance -ClassName Win32_PhysicalMemory | Select-Object -First 1 -ExpandProperty FormFactor)"]
-            ram_type = subprocess.check_output(command).decode().strip()
+            ram_type = subprocess.check_output(command, creationflags=CREATE_NO_WINDOW).decode().strip()
             form_factors = {
                 "2": "DIMM",
                 "3": "SO-DIMM",

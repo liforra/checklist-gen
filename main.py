@@ -329,13 +329,11 @@ class Menu:
                     print(self.term.clear)
                     print(self.term.move_y(0) + "=== Menu ===\n")
                     
-                    # Filter visible options for display only
                     visible_options = [(idx, opt) for idx, opt in enumerate(self.options) 
                                      if self.is_visible(opt[0])]
                     
                     max_width, num_columns, num_rows = self.get_layout()
                     
-                    # Display items in grid (visible only)
                     for row in range(num_rows):
                         line = ""
                         for col in range(num_columns):
@@ -347,84 +345,102 @@ class Menu:
                                 line += item.ljust(max_width)
                         print(line)
                     
-                    # Show number buffer or error
                     if self.error_message and time.time() - self.error_time < 2:
                         print(f"\nError: {self.error_message}")
                     if self.number_buffer:
                         print(f"\nEntering: {self.number_buffer}")
                     
-                    # Show last selection
                     if self.last_selected is not None:
                         print(f"\nLast selected: {self.last_selected}")
                     
                     key = self.term.inkey()
                     
-                    if key.isdigit():
-                        self.number_buffer += key
-                        self.error_message = ""
-                        try:
-                            num = int(self.number_buffer)
-                            for idx, (opt_num, _) in enumerate(self.options):
-                                if opt_num == num:
-                                    self.current_option = idx
-                                    break
-                        except ValueError:
-                            pass
-                    elif key.name == 'KEY_BACKSPACE':
-                        if self.number_buffer:
-                            self.number_buffer = self.number_buffer[:-1]
+                    # Handle key input for both string and key object types
+                    if isinstance(key, str):
+                        if key.isdigit():
+                            self.number_buffer += key
                             self.error_message = ""
+                            try:
+                                num = int(self.number_buffer)
+                                for idx, (opt_num, _) in enumerate(self.options):
+                                    if opt_num == num:
+                                        self.current_option = idx
+                                        break
+                            except ValueError:
+                                pass
+                    elif hasattr(key, 'name'):
+                        if key.name == 'KEY_BACKSPACE':
+                            if self.number_buffer:
+                                self.number_buffer = self.number_buffer[:-1]
+                                self.error_message = ""
+                                if self.number_buffer:
+                                    try:
+                                        num = int(self.number_buffer)
+                                        for idx, (opt_num, _) in enumerate(self.options):
+                                            if opt_num == num:
+                                                self.current_option = idx
+                                                break
+                                    except ValueError:
+                                        pass
+                        elif key.name == 'KEY_ENTER':
                             if self.number_buffer:
                                 try:
                                     num = int(self.number_buffer)
+                                    found = False
                                     for idx, (opt_num, _) in enumerate(self.options):
                                         if opt_num == num:
-                                            self.current_option = idx
-                                            break
-                                except ValueError:
-                                    pass
-                    elif key.name == 'KEY_ENTER':
-                        if self.number_buffer:
-                            try:
-                                num = int(self.number_buffer)
-                                found = False
-                                for idx, (opt_num, _) in enumerate(self.options):
-                                    if opt_num == num:
-                                        found = True
-                                        self.last_selected = None  # Reset last selected
+                                            found = True
+                                            self.last_selected = None  # Reset last selected
+                                            self.number_buffer = ""
+                                            return idx
+                                    if not found:
+                                        self.error_message = f"No option with number {num}"
+                                        self.error_time = time.time()
                                         self.number_buffer = ""
-                                        return idx
-                                if not found:
-                                    self.error_message = f"No option with number {num}"
+                                except ValueError:
+                                    self.error_message = "Invalid number"
                                     self.error_time = time.time()
                                     self.number_buffer = ""
-                            except ValueError:
-                                self.error_message = "Invalid number"
-                                self.error_time = time.time()
-                                self.number_buffer = ""
-                        else:
-                            self.last_selected = None  # Reset last selected
-                            return self.current_option
-                    elif key == 'q':
-                        return len(self.options) - 1
-                    elif key.name == 'KEY_ESCAPE':
-                        self.number_buffer = ""
-                    elif key.name == 'KEY_UP' or key == 'k':
-                        self.current_option = self.next_visible_option(self.current_option, -1)
-                    elif key.name == 'KEY_DOWN' or key == 'j':
-                        self.current_option = self.next_visible_option(self.current_option, 1)
-                    elif key.name == 'KEY_LEFT' or key == 'h':
-                        self.current_option = self.next_visible_option(self.current_option, -num_rows)
-                    elif key.name == 'KEY_RIGHT' or key == 'l':
-                        self.current_option = self.next_visible_option(self.current_option, num_rows)
+                            else:
+                                self.last_selected = None  # Reset last selected
+                                return self.current_option
+                        elif key == 'q':
+                            return len(self.options) - 1
+                        elif key.name == 'KEY_ESCAPE':
+                            self.number_buffer = ""
+                        elif key.name == 'KEY_UP' or key == 'k':
+                            self.current_option = self.next_visible_option(self.current_option, -1)
+                        elif key.name == 'KEY_DOWN' or key == 'j':
+                            self.current_option = self.next_visible_option(self.current_option, 1)
+                        elif key.name == 'KEY_LEFT' or key == 'h':
+                            self.current_option = self.next_visible_option(self.current_option, -num_rows)
+                        elif key.name == 'KEY_RIGHT' or key == 'l':
+                            self.current_option = self.next_visible_option(self.current_option, num_rows)
         finally:
             self.term.reset()  # Ensure terminal is reset when display ends
 
+import sys
+import win32gui
+import win32con
+
+def hideConsole():
+    if __name__ == "__main__":  # Only hide console when run directly
+        try:
+            hwnd = win32gui.GetForegroundWindow()
+            win32gui.ShowWindow(hwnd, win32con.SW_HIDE)
+        except:
+            pass
+
 def main():
+    hideConsole()
     # Bypass terminal initialization completely for GUI mode
     import sys
     import os
-     
+    
+    # Redirect stdout and stderr to null
+    sys.stdout = open('nul', 'w')
+    sys.stderr = open('nul', 'w')
+    
     class TerminalMock:
         def __init__(self):
             self.width = 80
@@ -432,7 +448,7 @@ def main():
             self.fullscreen = self.cbreak = self.hidden_cursor = self.dummy_context
             self.clear = ''
             self.move_y = lambda y: ''
-        
+            
         def __call__(self, *args, **kwargs):
             return self
             
@@ -447,6 +463,10 @@ def main():
         def inkey(self, *args, **kwargs):
             time.sleep(0.1)  # Prevent CPU spin
             return type('Key', (), {'name': None, 'is_sequence': False})
+            
+        def clear(self): return ''
+        def move_y(self, y): return ''
+        def print(self, *args, **kwargs): pass
     
     # Replace Terminal() with our mock
     global Terminal

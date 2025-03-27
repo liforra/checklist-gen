@@ -1,6 +1,15 @@
 import tkinter as tk
 from tkinter import ttk
 import tkinter.font as tkfont
+import win32gui
+import win32con
+
+def hideConsole():
+    try:
+        hwnd = win32gui.GetForegroundWindow()
+        win32gui.ShowWindow(hwnd, win32con.SW_HIDE)
+    except:
+        pass
 
 class DarkModeApp:
     def __init__(self, root):
@@ -231,6 +240,7 @@ class RawInputWindow:
         self.root.destroy()
 
 def main():
+    hideConsole()
     root = tk.Tk()
     app = DarkModeApp(root)
     root.mainloop()
