@@ -11,12 +11,12 @@ import wmi
 // vscode-fold=1
 """
 # vscode-fold=1
-dell = "Dell" in subprocess.check_output(["powershell", "Get-CimInstance -ClassName Win32_ComputerSystem | Select-Object -ExpandProperty Manufacturer"]).decode().strip()
+dell = "Dell" in subprocess.check_output(["powershell", "-WindowStyle", "Hidden", "-NoProfile", "-ExecutionPolicy", "Bypass", "Get-CimInstance -ClassName Win32_ComputerSystem | Select-Object -ExpandProperty Manufacturer"]).decode().strip()
 def processor(): 
     # Formatted as Intel i5-6300U
     try:
         if platform.system() == "Windows":
-            command = ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "(Get-CimInstance -ClassName Win32_Processor).Name"]
+            command = ["powershell", "-WindowStyle", "Hidden", "-NoProfile", "-ExecutionPolicy", "Bypass", "(Get-CimInstance -ClassName Win32_Processor).Name"]
             return subprocess.check_output(command).decode().strip()
         elif platform.system() == "Darwin":
             return None
@@ -29,7 +29,7 @@ def processor_freq():
     # in GHz
     try:
         if platform.system() == "Windows":
-            command = ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "(Get-CimInstance -ClassName Win32_Processor).CurrentClockSpeed"]
+            command = ["powershell", "-WindowStyle", "Hidden", "-NoProfile", "-ExecutionPolicy", "Bypass", "(Get-CimInstance -ClassName Win32_Processor).CurrentClockSpeed"]
             return subprocess.check_output(command).decode().strip()
         else:
             return None
@@ -38,7 +38,7 @@ def processor_freq():
 def serial_number():
     try:
         if platform.system() == "Windows":
-            command = ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "Get-CimInstance -ClassName Win32_BIOS | Select-Object -ExpandProperty SerialNumber"]
+            command = ["powershell", "-WindowStyle", "Hidden", "-NoProfile", "-ExecutionPolicy", "Bypass", "Get-CimInstance -ClassName Win32_BIOS | Select-Object -ExpandProperty SerialNumber"]
             return subprocess.check_output(command).decode().strip()
         elif platform.system() == "Darwin":
             return None
@@ -52,7 +52,7 @@ def toexpress(SerialNumber: int):
 
 def ramamount():
     if platform.system() == "Windows":
-        command = ["powershell", "(Get-CimInstance -ClassName Win32_PhysicalMemory | Measure-Object -Property Capacity -Sum).Sum / 1GB"]
+        command = ["powershell", "-WindowStyle", "Hidden", "(Get-CimInstance -ClassName Win32_PhysicalMemory | Measure-Object -Property Capacity -Sum).Sum / 1GB"]
         return subprocess.check_output(command).decode().strip()
     else:
         return None 
@@ -61,7 +61,7 @@ def ram_frequency():
     try:
         if platform.system() == "Windows":
             # Using ConfiguredClockSpeed instead of Speed to get the actual running frequency
-            command = ["powershell", "Get-CimInstance -ClassName Win32_PhysicalMemory | Select-Object -First 1 -ExpandProperty ConfiguredClockSpeed"]
+            command = ["powershell", "-WindowStyle", "Hidden", "Get-CimInstance -ClassName Win32_PhysicalMemory | Select-Object -First 1 -ExpandProperty ConfiguredClockSpeed"]
             return subprocess.check_output(command).decode().strip()
         else:
             return None
@@ -71,7 +71,7 @@ def ram_type():
     # Get the RAM Type like DDR4
     try:
         if platform.system() == "Windows":
-            command = ["powershell", "Get-CimInstance -ClassName Win32_PhysicalMemory | Select-Object -ExpandProperty SMBIOSMemoryType -First 1"]
+            command = ["powershell", "-WindowStyle", "Hidden", "Get-CimInstance -ClassName Win32_PhysicalMemory | Select-Object -ExpandProperty SMBIOSMemoryType -First 1"]
             ram_type = subprocess.check_output(command).decode().strip()
             memory_types = {
                 "20": "DDR",
@@ -89,7 +89,7 @@ def windows_version():
     # Get the Version like 24H2
     try:
         if platform.system() == "Windows":
-            command = ["powershell", "(Get-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion').DisplayVersion"]
+            command = ["powershell", "-WindowStyle", "Hidden", "(Get-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion').DisplayVersion"]
             version = subprocess.check_output(command).decode().strip()
             # Remove any carriage returns, newlines, and extra whitespace
             version = version.replace('\r', '').replace('\n', '').strip()
@@ -102,7 +102,7 @@ def windows_edition():
     # Get the Edition like Windows 11 Pro
     try:
         if platform.system() == "Windows":
-            command = ["powershell", "(Get-CimInstance -ClassName Win32_OperatingSystem).Caption"]
+            command = ["powershell", "-WindowStyle", "Hidden", "(Get-CimInstance -ClassName Win32_OperatingSystem).Caption"]
             edition = subprocess.check_output(command).decode().strip()
             return re.sub(r'(\w+)\s+(\d+)', r'\1 \2', edition)
         else:
@@ -212,7 +212,7 @@ def product_name():
     # Get the Product Name formatted like Dell Latitude 7280
     try:
         if platform.system() == "Windows":
-            command = ["powershell", "(Get-CimInstance -ClassName Win32_ComputerSystem).Model"]
+            command = ["powershell", "-WindowStyle", "Hidden", "(Get-CimInstance -ClassName Win32_ComputerSystem).Model"]
             return subprocess.check_output(command).decode().strip()
         else:
             return None
@@ -223,7 +223,7 @@ def is_active():
     # Check if the system is activated
     try:
         if platform.system() == "Windows":
-            command = ["powershell", "(Get-CimInstance -ClassName SoftwareLicensingProduct | Where-Object { $_.PartialProductKey -ne $null }).LicenseStatus"]
+            command = ["powershell", "-WindowStyle", "Hidden", "(Get-CimInstance -ClassName SoftwareLicensingProduct | Where-Object { $_.PartialProductKey -ne $null }).LicenseStatus"]
             status = subprocess.check_output(command).decode().strip()
             return "Activated" if status == "1" else "Not Activated"
         else:
@@ -322,7 +322,7 @@ def userlist():
     # Important. The format is like this: "User1, User2, User3"
     try:
         if platform.system() == "Windows":
-            command = ["powershell", "(Get-CimInstance -ClassName Win32_UserProfile | Where-Object { $_.Special -eq $false }).LocalPath"]
+            command = ["powershell", "-WindowStyle", "Hidden", "(Get-CimInstance -ClassName Win32_UserProfile | Where-Object { $_.Special -eq $false }).LocalPath"]
             users = subprocess.check_output(command).decode().strip()
             # Remove the C:\Users\ part
             users = [user.split("\\")[-1] for user in users.splitlines()]
@@ -338,7 +338,7 @@ def bitlocker():
     # Check if the Main Drive is encrypted with Bitlocker
     try:
         if platform.system() == "Windows":
-            command = ["powershell", "(Get-BitLockerVolume -MountPoint 'C:').ProtectionStatus"]
+            command = ["powershell", "-WindowStyle", "Hidden", "(Get-BitLockerVolume -MountPoint 'C:').ProtectionStatus"]
             status = subprocess.check_output(command).decode().strip()
             return "Encrypted" if status == "1" else "Not Encrypted"
         else:
@@ -350,7 +350,7 @@ def domain():
     # Check in what domain the computer is registered in. if there is none return the string "Keine"
     try:
         if platform.system() == "Windows":
-            command = ["powershell", "(Get-CimInstance -ClassName Win32_ComputerSystem).Domain"]
+            command = ["powershell", "-WindowStyle", "Hidden", "(Get-CimInstance -ClassName Win32_ComputerSystem).Domain"]
             domain = subprocess.check_output(command).decode().strip()
             return domain if domain else "Keine"
         else:
@@ -362,7 +362,7 @@ def gpu():
     # Get the GPU name
     try:
         if platform.system() == "Windows":
-            command = ["powershell", "(Get-CimInstance -ClassName Win32_VideoController).Name"]
+            command = ["powershell", "-WindowStyle", "Hidden", "(Get-CimInstance -ClassName Win32_VideoController).Name"]
             gpu_name = subprocess.check_output(command).decode().strip()
             return gpu_name
         else:
@@ -384,7 +384,7 @@ def ramsticktype():
     # Detect the ram type (DIMM, SO-DIMM, etc.)
     try:
         if platform.system() == "Windows":
-            command = ["powershell", "(Get-CimInstance -ClassName Win32_PhysicalMemory | Select-Object -First 1 -ExpandProperty FormFactor)"]
+            command = ["powershell", "-WindowStyle", "Hidden", "(Get-CimInstance -ClassName Win32_PhysicalMemory | Select-Object -First 1 -ExpandProperty FormFactor)"]
             ram_type = subprocess.check_output(command).decode().strip()
             form_factors = {
                 "2": "DIMM",
