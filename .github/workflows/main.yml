@@ -25,12 +25,12 @@ jobs:
           
       - name: Build with PyInstaller
         run: |
-          pyinstaller --onefile --noconsole -i ./.img/checklist.ico --hidden-import blessed.terminal --collect-all blessed --name ChecklistGen-Py main.py
+          pyinstaller --onefile --noconsole -i ./.img/checklist.ico --hidden-import blessed.terminal --collect-all blessed --name ChecklistGen-Py gui.py
           
       # - name: Build with Nuitka
       #   run: |
       #     python -m nuitka --standalone --follow-imports --windows-console-mode=disable --assume-yes-for-downloads --windows-icon-from-ico=./.img/checklist.ico --python-flag=no_site --include-package=blessed --include-package=wcwidth --include-package=six --include-package=jinxed --output-dir=dist --windows-dependency-tool=depends main.py
-      #     mv "dist/main.dist/gui.exe" "dist/ChecklistGen-C.exe"
+      #     mv "dist/gui.dist/gui.exe" "dist/ChecklistGen-C.exe"
           
       - name: Create Release
         id: create_release
