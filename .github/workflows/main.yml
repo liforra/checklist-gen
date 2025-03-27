@@ -30,7 +30,7 @@ jobs:
       - name: Build with Nuitka
         run: |
           python -m nuitka --standalone --follow-imports --windows-disable-console --assume-yes-for-downloads --windows-icon-from-ico=./.img/checklist.ico --output-dir=dist gui.py
-          mv "dist/main.dist/gui.exe" "dist/ChecklistGen-C.exe"
+          mv "dist/gui.dist/gui.exe" "dist/ChecklistGen-C.exe"
           
       - name: Create Release
         id: create_release
