@@ -421,13 +421,38 @@ class Menu:
             self.term.reset()  # Ensure terminal is reset when display ends
 
 def main():
-    # Handle terminal for blessed in GUI mode
+    # Bypass terminal initialization completely for GUI mode
     import sys
-    sys.stdout = open('nul', 'w')
-    sys.stderr = open('nul', 'w')
+    import os
+     
+    class TerminalMock:
+        def __init__(self):
+            self.width = 80
+            self.height = 24
+            self.fullscreen = self.cbreak = self.hidden_cursor = self.dummy_context
+            self.clear = ''
+            self.move_y = lambda y: ''
+        
+        def __call__(self, *args, **kwargs):
+            return self
+            
+        def dummy_context(self):
+            class DummyContext:
+                def __enter__(self): pass
+                def __exit__(self, *args): pass
+            return DummyContext()
+            
+        def reset(self): pass
+        
+        def inkey(self, *args, **kwargs):
+            time.sleep(0.1)  # Prevent CPU spin
+            return type('Key', (), {'name': None, 'is_sequence': False})
     
-    # Continue with existing code
+    # Replace Terminal() with our mock
+    global Terminal
+    Terminal = TerminalMock
     term = Terminal()
+    
     try:
         start_check_threads()
         wait_thread = threading.Thread(target=wait_for_threads, daemon=True)
