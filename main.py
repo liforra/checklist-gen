@@ -1,17 +1,24 @@
 # AI Disclaimer: This script was created heavily using AI.
 # Good Luck.
 try:
-    import time
     from blessed import Terminal
     import threading
     import time
     import platform
     import os
     import subprocess
-    from pynput import keyboard, mouse
 except ImportError as e:
     print(f"Oops, you forgot to add the libraries to requirements.txt. ")
-    raise e
+
+testkeyboard = True
+esc_press_count = 0  # Add this line
+
+try:
+    from pynput import keyboard, mouse
+except ImportError as e:
+    print(f"No X Server or Wayland Server found. Or keyboard and mouse library arent present.")
+    print(f"Disabling Input Tester.")
+    testkeyboard = False
 try:
     from portableapps import portableApps
 except ImportError:
@@ -23,16 +30,45 @@ except ImportError:
 match platform.system():
     case "Windows":
         import check as c
-    case "Linux":
-        import check_linux as c
-    case "Darwin":
-        import check_mac as c
     case _:
         raise NotImplementedError(f"Unsupported platform: {platform.system()}")
+"""    case "Linux":
+        import check_linux as c
+    case "Darwin":
+        import check_mac as c"""
 
+# Initialize global variables for hardware info
+cpu = ""
+cpu_freq = ""
+gpu = ""
+battery_health = ""
+product = ""
+serial = ""
+dell_express = ""
+ram_amount = ""
+ram_freq = ""
+ram_type = ""
+ram_slots = ""
+ram_stick_type = ""
+drive_size = ""
+drive_type = ""
+windows_ed = ""
+windows_ver = ""
+activation = ""
+last_update = ""
+users = ""
+bitlocker_status = ""
+domain_info = ""
 
-
-def raw_input_test():
+def raw_input_test(from_gui=False):
+    global esc_press_count
+    esc_press_count = 0  # Reset counter when starting test
+    if not testkeyboard:
+        print("Input tester is disabled.")
+        return
+    if from_gui:
+        return  # Skip terminal version when called from GUI
+        
     # This will import one library and show every key up and down
 
     # Callback for keyboard events
@@ -80,28 +116,45 @@ def raw_input_test():
 
 
 
+
+
 def check_number(number):
     os_type = platform.system()
     
     if os_type == "Windows":
         match number:
             case 1:
-                os.system("start devmgmt.msc")
+                info()
+                return True
             case 2:
-                os.system("start ms-settings:windowsupdate")
+                os.system("start devmgmt.msc")
+                return True
             case 3:
-                os.system("start https://liforra.de/keyboardtest.exe")
-            case 4:
-                os.system("start cmd /c powercfg /batteryreport")
+                os.system("start ms-settings:windowsupdate")
+                return True
             case 5:
                 raw_input_test()
+                return True
+            case 7:
+                raw_input_test()
+                return True
             case 6:
                 portableApps()
+                return True
             case 801:
                 os.system("powershell -c \"irm https://get.activated.win | iex\"")
+                return True
+            case 4:
+                os.system("start taskmgr")
+                return True
+            case 8:
+                os.system("powercfg /batteryreport")
+                os.system("start battery-report.html")
+                return True
             case _:
                 print(f"Option {number} nicht verfügbar für Windows")
-    
+                return True
+""" 
     elif os_type == "Darwin":  # macOS
         match number:
             case 1:
@@ -130,29 +183,43 @@ def check_number(number):
                 raw_input_test()
             case _:
                 print(f"Option {number} nicht verfügbar für Linux")
+        return
     
     else:
         print(f"Betriebssystem {os_type} wird nicht unterstützt")
-
+"""
 
 
 cthread = 0
 check_threads = []
+threads_complete = False
 
 def check_runner():
     check()
 
 def start_check_threads():
-    global cthread, check_threads
+    global cthread, check_threads, threads_complete
+    threads_complete = False
     for i in range(3):
         cthread += 1
         thread = threading.Thread(target=check_runner, daemon=True)
         check_threads.append(thread)
         thread.start()
 
+def wait_for_threads():
+    global threads_complete
+    for thread in check_threads:
+        thread.join()
+    threads_complete = True
+
+def get_thread_status():
+    return threads_complete
+
 def check():
+    global cthread, cpu, cpu_freq, gpu, battery_health, product, serial, dell_express
+    global ram_amount, ram_freq, ram_type, ram_slots, ram_stick_type, drive_size, drive_type
+    global windows_ed, windows_ver, activation, last_update, users, bitlocker_status, domain_info
     
-    global cthread
     match cthread:
         case 1:
             # Hardware information
@@ -188,7 +255,38 @@ def check():
             return None
 
 
+def info():
+    global threads_complete
+    if not threads_complete:
+        print("Please wait while system information is being gathered...")
+        wait_for_threads()
+    print(f"Produkt: {cpu}; Serial Nr: {serial}{dell_express}")
+    print(f"CPU: {cpu}; Akkuzustand: {battery_health}%")
+    print(f"GPU: {gpu}")
+    print(f"RAM: {ram_amount} GB; {ram_freq} MHz; {ram_type};  Slots: {ram_slots}; RAM-Art: {ram_stick_type}")
+    print(f"Hauptfestplatte: {drive_size} GB; {drive_type}")
+    print(f"Betriebsystem: {windows_ed}; Version: {windows_ver}; Aktivierung: {activation}")
+    print(f"Letztes Update: {last_update}")
+    print("\n")
+    print(f"Benutzer: {users}")
+    print(f"Bitlocker: {bitlocker_status}")
+    print(f"In der Domäne: {domain_info}")
+    print("\n")
 
+menu_options = [
+    (1, "Hardware Information"),
+    (2, "Device Manager"),
+    (3, "Windows Update"),
+    (8, "Battery Report"),
+    (6, "Portable Apps"),
+    (4, "TaskManager"),
+    (801, "Windows Activation"),
+    (0, "Exit"),
+    (7, "Raw Input Test")
+]
+
+if testkeyboard:
+    menu_options.insert(2, (5, "Keyboard Test"))
 
 
 class Menu:
@@ -196,6 +294,7 @@ class Menu:
         self.options = options
         self.current_option = 0
         self.term = Terminal()
+        self.term.reset()  # Reset terminal state on initialization
         self.number_buffer = ""
         self.error_message = ""
         self.error_time = 0
@@ -203,7 +302,7 @@ class Menu:
 
     def is_visible(self, num):
         return not (800 <= num <= 999)
-        
+
     def get_layout(self):
         # Calculate max item width and terminal space
         max_width = max(len(option[1]) for option in self.options) + 4  # +4 for prefix and padding
@@ -214,128 +313,150 @@ class Menu:
         num_rows = (len(self.options) + num_columns - 1) // num_columns
         
         return max_width, num_columns, num_rows
+
+    def next_visible_option(self, current, direction):
+        new_option = current + direction
+        while 0 <= new_option < len(self.options):
+            if self.is_visible(self.options[new_option][0]):
+                return new_option
+            new_option += direction
+        return current
         
     def display(self):
-        with self.term.fullscreen(), self.term.cbreak(), self.term.hidden_cursor():
-            while True:
-                print(self.term.clear)
-                print(self.term.move_y(0) + "=== Menu ===\n")
-                
-                # Filter visible options for display only
-                visible_options = [(idx, opt) for idx, opt in enumerate(self.options) 
-                                 if self.is_visible(opt[0])]
-                
-                max_width, num_columns, num_rows = self.get_layout()
-                
-                # Display items in grid (visible only)
-                for row in range(num_rows):
-                    line = ""
-                    for col in range(num_columns):
-                        idx = col * num_rows + row
-                        if idx < len(visible_options):
-                            orig_idx, (num, text) = visible_options[idx]
-                            prefix = '>' if orig_idx == self.current_option else ' '
-                            item = f"{prefix} [{num:2}] {text}"
-                            line += item.ljust(max_width)
-                    print(line)
-                
-                # Show number buffer or error
-                if self.error_message and time.time() - self.error_time < 2:
-                    print(f"\nError: {self.error_message}")
-                elif self.number_buffer:
-                    print(f"\nEntering: {self.number_buffer}")
+        try:
+            with self.term.fullscreen(), self.term.cbreak(), self.term.hidden_cursor():
+                while True:
+                    print(self.term.clear)
+                    print(self.term.move_y(0) + "=== Menu ===\n")
                     
-                # Show last selection
-                if self.last_selected is not None:
-                    print(f"\nLast selected: {self.last_selected}")
-                
-                key = self.term.inkey()
-                
-                if key.isdigit():
-                    self.number_buffer += key
-                    self.error_message = ""
-                    # Try to find matching option
-                    try:
-                        num = int(self.number_buffer)
-                        found = False
-                        for idx, (opt_num, _) in enumerate(self.options):
-                            if opt_num == num:  # Exact match only
-                                self.current_option = idx
-                                found = True
-                                break
-                        if not found and len(self.number_buffer) >= 3:
-                            self.error_message = f"No option with number {num}"
-                            self.error_time = time.time()
-                    except ValueError:
-                        pass
-                elif key.name == 'KEY_BACKSPACE':
+                    # Filter visible options for display only
+                    visible_options = [(idx, opt) for idx, opt in enumerate(self.options) 
+                                     if self.is_visible(opt[0])]
+                    
+                    max_width, num_columns, num_rows = self.get_layout()
+                    
+                    # Display items in grid (visible only)
+                    for row in range(num_rows):
+                        line = ""
+                        for col in range(num_columns):
+                            idx = col * num_rows + row
+                            if idx < len(visible_options):
+                                orig_idx, (num, text) = visible_options[idx]
+                                prefix = '>' if orig_idx == self.current_option else ' '
+                                item = f"{prefix} [{num}] {text}"
+                                line += item.ljust(max_width)
+                        print(line)
+                    
+                    # Show number buffer or error
+                    if self.error_message and time.time() - self.error_time < 2:
+                        print(f"\nError: {self.error_message}")
                     if self.number_buffer:
-                        self.number_buffer = self.number_buffer[:-1]
+                        print(f"\nEntering: {self.number_buffer}")
+                    
+                    # Show last selection
+                    if self.last_selected is not None:
+                        print(f"\nLast selected: {self.last_selected}")
+                    
+                    key = self.term.inkey()
+                    
+                    if key.isdigit():
+                        self.number_buffer += key
                         self.error_message = ""
-                elif key.name == 'KEY_ENTER' and self.number_buffer:
-                    try:
-                        num = int(self.number_buffer)
-                        found = False
-                        for idx, (opt_num, _) in enumerate(self.options):
-                            if opt_num == num:
-                                self.last_selected = num
-                                return idx
-                        if not found:
-                            self.error_message = f"No option with number {num}"
-                            self.error_time = time.time()
-                            self.number_buffer = ""
-                    except ValueError:
-                        pass
-                elif key.name == 'KEY_ENTER':
-                    return self.current_option
-                elif key == 'q':
-                    return len(self.options) - 1
-                # Clear buffer on escape
-                elif key.name == 'KEY_ESCAPE':
-                    self.number_buffer = ""
-                elif key.name == 'KEY_UP' or key == 'k':
-                    self.current_option = max(0, self.current_option - 1)
-                elif key.name == 'KEY_DOWN' or key == 'j':
-                    self.current_option = min(len(self.options) - 1, self.current_option + 1)
-                elif key.name == 'KEY_LEFT' or key == 'h':
-                    self.current_option = max(0, self.current_option - num_rows)
-                elif key.name == 'KEY_RIGHT' or key == 'l':
-                    self.current_option = min(len(self.options) - 1, self.current_option + num_rows)
+                        try:
+                            num = int(self.number_buffer)
+                            for idx, (opt_num, _) in enumerate(self.options):
+                                if opt_num == num:
+                                    self.current_option = idx
+                                    break
+                        except ValueError:
+                            pass
+                    elif key.name == 'KEY_BACKSPACE':
+                        if self.number_buffer:
+                            self.number_buffer = self.number_buffer[:-1]
+                            self.error_message = ""
+                            if self.number_buffer:
+                                try:
+                                    num = int(self.number_buffer)
+                                    for idx, (opt_num, _) in enumerate(self.options):
+                                        if opt_num == num:
+                                            self.current_option = idx
+                                            break
+                                except ValueError:
+                                    pass
+                    elif key.name == 'KEY_ENTER':
+                        if self.number_buffer:
+                            try:
+                                num = int(self.number_buffer)
+                                found = False
+                                for idx, (opt_num, _) in enumerate(self.options):
+                                    if opt_num == num:
+                                        found = True
+                                        self.last_selected = None  # Reset last selected
+                                        self.number_buffer = ""
+                                        return idx
+                                if not found:
+                                    self.error_message = f"No option with number {num}"
+                                    self.error_time = time.time()
+                                    self.number_buffer = ""
+                            except ValueError:
+                                self.error_message = "Invalid number"
+                                self.error_time = time.time()
+                                self.number_buffer = ""
+                        else:
+                            self.last_selected = None  # Reset last selected
+                            return self.current_option
+                    elif key == 'q':
+                        return len(self.options) - 1
+                    elif key.name == 'KEY_ESCAPE':
+                        self.number_buffer = ""
+                    elif key.name == 'KEY_UP' or key == 'k':
+                        self.current_option = self.next_visible_option(self.current_option, -1)
+                    elif key.name == 'KEY_DOWN' or key == 'j':
+                        self.current_option = self.next_visible_option(self.current_option, 1)
+                    elif key.name == 'KEY_LEFT' or key == 'h':
+                        self.current_option = self.next_visible_option(self.current_option, -num_rows)
+                    elif key.name == 'KEY_RIGHT' or key == 'l':
+                        self.current_option = self.next_visible_option(self.current_option, num_rows)
+        finally:
+            self.term.reset()  # Ensure terminal is reset when display ends
 
 def main():
     term = Terminal()
-    menu_options = [
-        (1, "Device Manager"),
-        (2, "Windows Update"),
-        (3, "Keyboard Test"),
-        (4, "Battery Report"),
-        (5, "Raw Input Test"),
-        (6, "CrystalDiskMark"),
-        (801, "Windows Activation"),
-        (0, "Exit")
-    ]
-    
     try:
-        # Start all check threads before creating menu
         start_check_threads()
-        # Create and show menu while threads run in background
-        menu = Menu(menu_options)
+        wait_thread = threading.Thread(target=wait_for_threads, daemon=True)
+        wait_thread.start()
+        
         while True:
-            selection = menu.display()
-            # Get the selected number from the menu options
-            selected_num = menu_options[selection][0]
-            if selected_num == 0:
-                break
-            # Handle selection using the existing check_number function
-            print(term.clear)
-            from choice import check_number
-            check_number(selected_num)
-            print("\nPress Enter to continue...")
-            term.inkey()
+            term.reset()  # Reset terminal state
+            menu = Menu(menu_options)
+            try:
+                selection = menu.display()
+                if selection is None:
+                    continue
+                selected_num = menu_options[selection][0]
+                if selected_num == 0:
+                    break
+                print(term.clear)
+                check_number(selected_num)
+                input("\nPress Enter to continue...")
+            finally:
+                term.reset()  # Ensure terminal is reset after each menu iteration
     finally:
-        # Cleanup threads on exit
+        term.reset()  # Final cleanup
         for thread in check_threads:
             thread.join(timeout=0.5)
+
+
+
+def run(option:int):
+    global threads_complete
+    if option == 1 and not threads_complete:  # For hardware info, make sure threads are running
+        if not check_threads:  # Only start if not already started
+            start_check_threads()
+    check_number(option)
+
+
 
 if __name__ == "__main__":
     main()

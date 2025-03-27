@@ -369,11 +369,17 @@ def gpu():
             return None
     except Exception as e:
         return f"Error retrieving GPU name: {e}"
+
 def get_ram_slots():
-    c = wmi.WMI()
-    inserted = len(c.Win32_PhysicalMemory())
-    total = c.Win32_PhysicalMemoryArray()[0].MemoryDevices
-    return f"{inserted}/{total}"
+    try:
+        c = wmi.WMI()
+        slots = 0
+        for slot in c.Win32_PhysicalMemoryArray():
+            slots += slot.MemoryDevices
+        return slots
+    except Exception as e:
+        return "N/A"
+
 def ramsticktype():
     # Detect the ram type (DIMM, SO-DIMM, etc.)
     try:
@@ -392,15 +398,9 @@ def ramsticktype():
     except Exception as e:
         return f"Error retrieving RAM type: {e}"
 
-# print(f"Produkt: {product_name()}; Serial Nr: {serial_number()}{dellexpressstr()}")
-# print(f"CPU: {processor()}; Akkuzustand: {batteryHealth()}%")
-# print(f"GPU: {gpu()}")
-# print(f"RAM: {ramamount()} GB; {ram_frequency()} MHz; {ram_type()};  Slots: {get_ram_slots()}; RAM-Art: {ramsticktype()}")
-# print(f"Hauptfestplatte: {driveSize()} GB; {driveType()}")
-# print(f"Betriebsystem: {windows_edition()}; Version: {windows_version()}; Aktivierung: {is_active()}")
-# print(f"Letztes Update: {lastupdatedate()}")
-# print("\n")
-# print(f"Benutzer: {userlist()}")
-# print(f"Bitlocker: {bitlocker()}")
-# print(f"In der Domäne: {domain()}")
-# print("\n")
+def _get_wmi_object():
+    try:
+        return wmi.WMI()
+    except:
+        return None
+

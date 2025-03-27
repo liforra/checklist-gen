@@ -52,7 +52,7 @@ def get_battery_health():
             full_capacity = float(full_capacity_str)
         
         # Calculate battery health
-        battery_health = min(round((full_capacity / design_capacity) * 100), 100)
+        battery_health = min(round((full_capacity / design_capacity) * 100, 1), 100)
         
         return battery_health
     except subprocess.CalledProcessError as e:
