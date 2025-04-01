@@ -16,7 +16,7 @@ esc_press_count = 0  # Add this line
 
 try:
     from pynput import keyboard, mouse
-    from tkinter import filedialog, Tk
+    from tkinter import filedialog, Tk, messagebox
 except ImportError as e:
     print(f"No X Server or Wayland Server found. Or keyboard and mouse library arent present.")
     print(f"Disabling Input Tester.")
@@ -68,71 +68,61 @@ domain_info = ""
 def dump():
     if "tkinter" in globals():
         root = Tk()
-        root.withdraw()  # Hide the main tkinter window        
+        root.withdraw()  # Hide the main tkinter window
+        
         # Find the first drive with the ChecklistDump directory
         drives_with_dump = liforra.find_dir("ChecklistDump")
-        default_folder = drives_with_dump[0] if drives_with_dump else os.getcwd()
+        initial_dir = os.path.join(drives_with_dump[0], "ChecklistDump") if drives_with_dump else os.getcwd()
         
-        folder_path = filedialog.askdirectory(
-            title="Select Folder to Save Checklist Dump",
-            initialdir=default_folder
+        # Format the filename
+        global product, serial
+        if not product or not serial:
+            messagebox.showerror("Error", "Product or Serial information is missing. Cannot create file.")
+            return
+        
+        filename_base = f"{product.replace(' ', '_')}_{serial}"
+        file_types = [("Text File", "*.txt"), ("JSON File", "*.json"), ("CSV File", "*.csv")]
+        file_path = filedialog.asksaveasfilename(
+            initialdir=initial_dir,
+            initialfile=filename_base,
+            title="Save Checklist Dump",
+            filetypes=file_types,
+            defaultextension=".txt"
         )
-        if folder_path:
-            print(f"Selected folder: {folder_path}")
+        
+        if file_path:
+            # Determine file extension and save content accordingly
+            _, ext = os.path.splitext(file_path)
+            ext = ext.lower()
+            content = {
+                "product": product,
+                "serial": serial,
+                "cpu": cpu,
+                "gpu": gpu,
+                "battery_health": battery_health,
+                "ram_amount": ram_amount,
+                "drive_size": drive_size,
+                "windows_version": windows_ver,
+            }
             
-            # Format the filename
-            global product, serial
-            if not product or not serial:
-                print("Product or Serial information is missing. Cannot create file.")
-                return
-            
-            filename_base = f"{product.replace(' ', '_')}_{serial}"
-            file_types = [("Text File", "*.txt"), ("JSON File", "*.json"), ("CSV File", "*.csv")]
-            file_path = filedialog.asksaveasfilename(
-                initialdir=folder_path,
-                initialfile=filename_base,
-                title="Save Checklist Dump",
-                filetypes=file_types,
-                defaultextension=".txt"
-            )
-            
-            if file_path:
-                print(f"File will be saved as: {file_path}")
-                # Determine file extension and save content accordingly
-                _, ext = os.path.splitext(file_path)
-                ext = ext.lower()
-                content = {
-                    "product": product,
-                    "serial": serial,
-                    "cpu": cpu,
-                    "gpu": gpu,
-                    "battery_health": battery_health,
-                    "ram_amount": ram_amount,
-                    "drive_size": drive_size,
-                    "windows_version": windows_ver,
-                }
-                
-                try:
-                    if ext == ".json":
-                        import json
-                        with open(file_path, "w") as file:
-                            json.dump(content, file, indent=4)
-                    elif ext == ".csv":
-                        import csv
-                        with open(file_path, "w", newline="") as file:
-                            writer = csv.writer(file)
-                            writer.writerow(content.keys())
-                            writer.writerow(content.values())
-                    else:  # Default to .txt
-                        with open(file_path, "w") as file:
-                            for key, value in content.items():
-                                file.write(f"{key}: {value}\n")
-                except Exception as e:
-                    print(f"Error saving file: {e}")
-            else:
-                print("File save operation was canceled.")
-        else:
-            print("No folder selected.")
+            try:
+                if ext == ".json":
+                    import json
+                    with open(file_path, "w") as file:
+                        json.dump(content, file, indent=4)
+                elif ext == ".csv":
+                    import csv
+                    with open(file_path, "w", newline="") as file:
+                        writer = csv.writer(file)
+                        writer.writerow(content.keys())
+                        writer.writerow(content.values())
+                else:  # Default to .txt
+                    with open(file_path, "w") as file:
+                        for key, value in content.items():
+                            file.write(f"{key}: {value}\n")
+                messagebox.showinfo("Success", f"File saved successfully to:\n{file_path}")
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to save file:\n{str(e)}")
     else:
         print("GUI not available. Returning 0.")
         return 0
