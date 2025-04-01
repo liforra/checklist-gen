@@ -225,6 +225,7 @@ def check_number(number):
                 return True
             case 9:
                 dump()
+                return True
             case _:
                 print(f"Option {number} nicht verfügbar für Windows")
                 return True
