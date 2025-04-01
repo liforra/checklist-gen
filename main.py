@@ -366,7 +366,7 @@ menu_options = [
     (4, "TaskManager"),
     (801, "Windows Activation"),
     (0, "Exit"),
-    (7, "Raw Input Test")
+    (7, "Raw Input Test"),
     (8, "Dump to File")
 ]
 
