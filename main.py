@@ -357,7 +357,7 @@ menu_options = [
     (801, "Windows Activation"),
     (0, "Exit"),
     (7, "Raw Input Test"),
-    (8, "Dump to File")
+    (9, "Dump to File")
 ]
 
 if testkeyboard:
