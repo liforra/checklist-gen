@@ -7,14 +7,16 @@ try:
     import platform
     import os
     import subprocess
+
 except ImportError as e:
     print(f"Oops, you forgot to add the libraries to requirements.txt. ")
-
+import liforra
 testkeyboard = True
 esc_press_count = 0  # Add this line
 
 try:
     from pynput import keyboard, mouse
+    from tkinter import filedialog, Tk
 except ImportError as e:
     print(f"No X Server or Wayland Server found. Or keyboard and mouse library arent present.")
     print(f"Disabling Input Tester.")
@@ -36,6 +38,9 @@ match platform.system():
         import check_linux as c
     case "Darwin":
         import check_mac as c"""
+
+
+    
 
 # Initialize global variables for hardware info
 cpu = ""
@@ -59,6 +64,83 @@ last_update = ""
 users = ""
 bitlocker_status = ""
 domain_info = ""
+
+def dump():
+    if "tkinter" in globals():
+        root = Tk()
+        root.withdraw()  # Hide the main tkinter window        
+        # Find the first drive with the ChecklistDump directory
+        drives_with_dump = liforra.find_dir("ChecklistDump")
+        default_folder = drives_with_dump[0] if drives_with_dump else os.getcwd()
+        
+        folder_path = filedialog.askdirectory(
+            title="Select Folder to Save Checklist Dump",
+            initialdir=default_folder
+        )
+        if folder_path:
+            print(f"Selected folder: {folder_path}")
+            
+            # Format the filename
+            global product, serial
+            if not product or not serial:
+                print("Product or Serial information is missing. Cannot create file.")
+                return
+            
+            filename_base = f"{product.replace(' ', '_')}_{serial}"
+            file_types = [("Text File", "*.txt"), ("JSON File", "*.json"), ("CSV File", "*.csv")]
+            file_path = filedialog.asksaveasfilename(
+                initialdir=folder_path,
+                initialfile=filename_base,
+                title="Save Checklist Dump",
+                filetypes=file_types,
+                defaultextension=".txt"
+            )
+            
+            if file_path:
+                print(f"File will be saved as: {file_path}")
+                # Determine file extension and save content accordingly
+                _, ext = os.path.splitext(file_path)
+                ext = ext.lower()
+                content = {
+                    "product": product,
+                    "serial": serial,
+                    "cpu": cpu,
+                    "gpu": gpu,
+                    "battery_health": battery_health,
+                    "ram_amount": ram_amount,
+                    "drive_size": drive_size,
+                    "windows_version": windows_ver,
+                }
+                
+                try:
+                    if ext == ".json":
+                        import json
+                        with open(file_path, "w") as file:
+                            json.dump(content, file, indent=4)
+                    elif ext == ".csv":
+                        import csv
+                        with open(file_path, "w", newline="") as file:
+                            writer = csv.writer(file)
+                            writer.writerow(content.keys())
+                            writer.writerow(content.values())
+                    else:  # Default to .txt
+                        with open(file_path, "w") as file:
+                            for key, value in content.items():
+                                file.write(f"{key}: {value}\n")
+                except Exception as e:
+                    print(f"Error saving file: {e}")
+            else:
+                print("File save operation was canceled.")
+        else:
+            print("No folder selected.")
+    else:
+        print("GUI not available. Returning 0.")
+        return 0
+    liforra.find_dir("ChecklistDump")
+    # use the first drive found
+    drive = liforra.find_dir("ChecklistDump")[0]
+    # Spawn a file explorer choose dialog, on the folder drive + "ChecklistDump"
+    # with the file types Json, txt, and csv
 
 def raw_input_test(from_gui=False):
     global esc_press_count
@@ -151,6 +233,8 @@ def check_number(number):
                 os.system("powercfg /batteryreport")
                 os.system("start battery-report.html")
                 return True
+            case 9:
+                dump()
             case _:
                 print(f"Option {number} nicht verfügbar für Windows")
                 return True
@@ -283,6 +367,7 @@ menu_options = [
     (801, "Windows Activation"),
     (0, "Exit"),
     (7, "Raw Input Test")
+    (8, "Dump to File")
 ]
 
 if testkeyboard:
