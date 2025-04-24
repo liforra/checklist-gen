@@ -1,3 +1,14 @@
+# **WICHTIG. DIESES PROJEKT WURDE AUF MEIN GITEA VERSCHOBEN**
+# **WICHTIG. DIESES PROJEKT WURDE AUF MEIN GITEA VERSCHOBEN**
+# **WICHTIG. DIESES PROJEKT WURDE AUF MEIN GITEA VERSCHOBEN**
+https://gitea.liforra.de/liforra
+
+
+
+
+
+
+
 [![Build and Release Executables](https://github.com/liforra/checklist-gen/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/liforra/checklist-gen/actions/workflows/main.yml)
 Ein Projekt um ganz einfach Systeminformationen anzeigen zu lassen.
 Das ist Hauptzächlich zum erleichtern meines Jobs
